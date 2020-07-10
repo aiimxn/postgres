@@ -65,6 +65,7 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", inline: <<-SHELL
    sudo yum -y install postgresql-server 
-   
+   sudo su -c "initdb" - postgres
+   sudo su -c "pg_ctl start" - postgres
   SHELL
 end
