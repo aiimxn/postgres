@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
+  config.vm.network "private_network", ip: "192.168.33.11"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on
@@ -66,6 +66,16 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
    sudo yum -y install postgresql-server 
    sudo su -c "initdb" - postgres
+   echo "host\tall\tall192.168.33.11/32\tmdS" | sudo -u postgres tee /var/lib/pgsql/data/pg_hba.conf > /dev/null
+   sudo su -c "sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/g\" /var/lib/pgsql/data/postgresql.conf" - postgres
    sudo su -c "pg_ctl start" - postgres
+   sudo su -c "psql -c \"CREATE USER metabase WITH PASSWORD 'password';\"" - postgres
+   sudo su -c "psql -c \"CREATE DATABASE metabasedb WITH OWNER metabase;\"" - postgres
+   
+
+   sudo systemctl enable firewalld
+   sudo systemctl start firewalld
+   sudo firewall-cmd --zone=public --add-port=5432/tcp --permanent
+   sudo firewall-cmd --reload
   SHELL
 end
